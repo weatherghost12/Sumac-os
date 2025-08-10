@@ -234,8 +234,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const { error } = await sb.auth.signInWithPassword({ email, password });
     if (error) { alert(error.message); return; }
     alert('Logged in!');
-  });
-  document.getElementById('signup-page-form')?.addEventListener('submit', async (e) => {
+    // redirect to site root (keeps GitHub Pages subpath)
+    const target = new URL('index.html', location.href).toString();
+    location.href = target;
+  });document.getElementById('signup-page-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!sb) return alert('Supabase SDK not loaded.');
     const tos = document.getElementById('su-tos');
@@ -250,9 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
     if (!sb) return alert('Supabase SDK not loaded.');
     const email = document.getElementById('reset-email').value.trim();
-    const { error } = await sb.auth.resetPasswordForEmail(email, {
-      redirectTo: location.origin + '/account.html'
-    });
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: (location.origin + (location.pathname.endsWith('account.html') ? location.pathname : location.pathname.replace(/[^/]+$/, 'account.html'))) });
     if (error) { alert(error.message); return; }
     alert('Reset link sent. Check your email.');
   });
@@ -265,3 +265,34 @@ document.addEventListener('DOMContentLoaded', () => {
       console.log('Auth:', _event, session?.user?.email || null);
     });
   } catch (e) {}
+
+
+  // Signed-in UI (email + sign out)
+  function renderAuthSession(session){
+    const wrap = document.getElementById('auth-state');
+    const emailEl = document.getElementById('auth-email');
+    const outBtn = document.getElementById('signout');
+    if (!wrap || !emailEl) return;
+    const email = session?.user?.email || null;
+    if (email){
+      emailEl.textContent = `Signed in as ${email}`;
+      wrap.hidden = false;
+    } else {
+      wrap.hidden = true;
+    }
+    outBtn?.addEventListener('click', async () => {
+      try { await sb?.auth.signOut(); alert('Signed out'); } catch(e){ alert('Sign out failed'); }
+    }, { once: true });
+  }
+
+  // Initialize from current session
+  try {
+    sb?.auth.getSession().then(({ data }) => renderAuthSession(data.session));
+  } catch(e){}
+
+  // Update on auth changes
+  try {
+    sb?.auth.onAuthStateChange((_event, session) => {
+      renderAuthSession(session);
+    });
+  } catch(e) {}
