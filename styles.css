@@ -226,3 +226,19 @@ input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px color-mi
   .nav-links{display:none}
   .hamburger{display:flex}
 }
+
+
+/* Signed-in state bar */
+.auth-state{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:.75rem;
+  background:#0b1019;
+  border:1px solid var(--border);
+  border-radius:.75rem;
+  padding:.5rem .75rem;
+  margin-bottom:.75rem;
+}
+#auth-email{color:var(--muted);font-size:.95rem}
+
